@@ -28,3 +28,8 @@ yarn.lock*
 client/src/_archived_js/
 
 .qodo
+
+.pytest_cache
+.idea
+.vscode
+__pycache__
