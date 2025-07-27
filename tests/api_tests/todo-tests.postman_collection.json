@@ -1,0 +1,413 @@
+{
+	"info": {
+		"_postman_id": "25a274dc-0252-4c56-8024-dcf9034527b7",
+		"name": "Todo API Test Automation - Nodejs",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "46279398",
+		"_collection_link": "https://hajar-1909137.postman.co/workspace/5674f228-dd3e-4b72-82e9-1d06b0da776f/collection/46279398-25a274dc-0252-4c56-8024-dcf9034527b7?action=share&source=collection_link&creator=46279398"
+	},
+	"item": [
+		{
+			"name": "Auth Tests",
+			"item": [
+				{
+					"name": "POST /auth/login – Positive",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Login should succeed\", () => {\r",
+									"    pm.expect(pm.response.code).to.eql(200);\r",
+									"});\r",
+									"\r",
+									"const jsonData = pm.response.json();\r",
+									"const token = jsonData.data?.tokens?.accessToken;\r",
+									"\r",
+									"if (token) {\r",
+									"    pm.environment.set(\"token\", token);\r",
+									"} else {\r",
+									"    throw new Error(\"Access token not found in nested data.tokens structure\");\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"john@example.com\",\r\n  \"password\": \"Password123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /auth/login - Negative",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Login should fail\", () => pm.response.code === 400);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"john@example.com\",\r\n  \"password\": \"Password1234\"\r\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Todo Tests",
+			"item": [
+				{
+					"name": "GET /todos – Positive",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Should return todos\", () => pm.response.code === 200);\r",
+									"\r",
+									"const jsonData = pm.response.json();\r",
+									"\r",
+									"const firstTodoId = jsonData.data.todos[0].id;\r",
+									"pm.environment.set(\"todo_id\", firstTodoId);\r",
+									"\r",
+									"const userId = jsonData.data.todos[0].userId;\r",
+									"pm.environment.set(\"user_id\", userId);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"todos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /todos – Positive",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Todo created\", () => pm.response.code === 201);\r",
+									"pm.environment.set(\"todo_id\", pm.response.json().id);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"title\": \"Complete project documentation\",\r\n  \"content\": \"Write comprehensive API documentation with examples\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/todos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"todos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /todos – Negative (missing text)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Should return 400 for validation error\", () => {\r",
+									"  pm.expect(pm.response.code).to.eql(400);\r",
+									"});\r",
+									"\r",
+									"const jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Error message is present\", () => {\r",
+									"  pm.expect(jsonData.success).to.eql(false);\r",
+									"  pm.expect(jsonData.errors.length).to.be.above(0);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/todos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"todos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PUT (NOT FOUND ON API)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {\r",
+									"    pm.expect(pm.response.code).to.eql(400);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"title\": \"Updated project title\",\r\n  \"content\": \"Updated detailed content\",\r\n  \"status\": \"in_progress\",\r\n  \"userId\": \"0d372461-fd37-4c0c-a112-cd5a7905b82e\"\r\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/todos/{{todo_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"todos",
+								"{{todo_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE /todos/{{todo_id}} - Positive",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Todo deleted\", () => {\r",
+									"    // pm.expect(pm.response.code).to.eql(200);\r",
+									"    const json = pm.response.json();\r",
+									"    // pm.expect(json.success).to.eql(true);\r",
+									"    pm.expect(json.message).to.include(\"Todo deleted successfully\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{base_url}}/todos/{{todo_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"todos",
+								"{{todo_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE /todos/{{todo_id}} - Negative",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Todo deleted - negative\", () => {\r",
+									"    // pm.expect(pm.response.code).to.eql(404);\r",
+									"    const json = pm.response.json();\r",
+									"    // pm.expect(json.success).to.eql(false);\r",
+									"    pm.expect(json.message).to.include(\"Todo not found\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{base_url}}/todos/{{todo_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"todos",
+								"{{todo_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
